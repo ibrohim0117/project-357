@@ -1,0 +1,10 @@
+{% if target != request.user %}
+    <form method="post" class="follow-form"
+          action="{% if target.id in following_ids %}{% url 'unfollow' target.id %}{% else %}{% url 'follow' target.id %}{% endif %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}{% if reel %}#reel-{{ reel.id }}{% endif %}">
+        <button type="submit" class="follow-btn{% if target.id in following_ids %} is-following{% endif %}">
+            {% if target.id in following_ids %}Following{% else %}Follow{% endif %}
+        </button>
+    </form>
+{% endif %}

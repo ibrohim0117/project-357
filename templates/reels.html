@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reels • Instagram</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Grand+Hotel&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --surface: #ffffff;
+            --text: #262626;
+            --border: #dbdbdb;
+            --divider: #efefef;
+            --blue: #0095f6;
+            --blue-hover: #1877f2;
+            --sidebar: 245px;
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: #000;
+            color: var(--text);
+            font-size: 14px;
+            line-height: 1.4;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        img {
+            display: block;
+            max-width: 100%;
+        }
+
+        .icon {
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .logo {
+            font-family: 'Grand Hotel', cursive;
+            font-size: 32px;
+            font-weight: 400;
+            line-height: 1;
+        }
+
+        /* ---------- Navigation ---------- */
+
+        .sidebar {
+            position: fixed;
+            inset: 0 auto 0 0;
+            width: var(--sidebar);
+            padding: 26px 12px 20px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 20;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            height: 48px;
+            padding: 0 12px;
+            margin-bottom: 28px;
+        }
+
+        .sidebar-logo .icon {
+            display: none;
+        }
+
+        .nav {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .nav-bottom {
+            margin-top: auto;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: background .15s;
+        }
+
+        .nav-link:hover {
+            background: #f2f2f2;
+        }
+
+        .nav-link.active {
+            font-weight: 700;
+        }
+
+        .nav-link.active .icon,
+        .tabbar a.active .icon {
+            stroke-width: 2.6;
+        }
+
+        .nav-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: var(--divider);
+            display: grid;
+            place-items: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: #555;
+            flex-shrink: 0;
+        }
+
+        a:focus-visible,
+        button:focus-visible {
+            outline: 2px solid var(--blue);
+            outline-offset: 2px;
+        }
+
+        .tabbar {
+            display: none;
+        }
+
+        /* ---------- Reels ---------- */
+
+        .reels {
+            margin-left: var(--sidebar);
+            height: 100vh;
+            height: 100dvh;
+            overflow-y: auto;
+            scroll-snap-type: y mandatory;
+            scrollbar-width: none;
+            outline: none;
+        }
+
+        .reels::-webkit-scrollbar {
+            display: none;
+        }
+
+        .reels-header {
+            position: fixed;
+            top: 0;
+            left: var(--sidebar);
+            right: 0;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #fff;
+            pointer-events: none;
+            filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .6));
+            z-index: 10;
+        }
+
+        .reels-header h1 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .reels-add {
+            display: grid;
+            place-items: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            pointer-events: auto;
+        }
+
+        .reel {
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+        }
+
+        .reel-stage {
+            position: relative;
+            height: 100%;
+            aspect-ratio: 9 / 16;
+            max-width: 100%;
+            overflow: hidden;
+            background: #111;
+            color: #fff;
+        }
+
+        .reel-video {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            cursor: pointer;
+        }
+
+        .reel-paused-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 72px;
+            height: 72px;
+            margin: -36px 0 0 -36px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, .45);
+            display: none;
+            place-items: center;
+            pointer-events: none;
+        }
+
+        .reel-paused-icon .icon {
+            width: 36px;
+            height: 36px;
+            fill: currentColor;
+            stroke: none;
+        }
+
+        .reel.is-paused .reel-paused-icon {
+            display: grid;
+        }
+
+        .reel-actions {
+            position: absolute;
+            right: 8px;
+            bottom: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .6));
+        }
+
+        .reel-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .reel-sound {
+            display: grid;
+            place-items: center;
+            width: 44px;
+            height: 44px;
+            border: none;
+            border-radius: 50%;
+            background: transparent;
+            color: inherit;
+            cursor: pointer;
+        }
+
+        .reel-sound .icon-off,
+        .reel-sound.is-muted .icon-on {
+            display: none;
+        }
+
+        .reel-sound.is-muted .icon-off {
+            display: block;
+        }
+
+        .reel-info {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 48px 64px 20px 14px;
+            background: linear-gradient(transparent, rgba(0, 0, 0, .65));
+            pointer-events: none;
+        }
+
+        .reel-info a,
+        .reel-info form,
+        .reel-caption {
+            pointer-events: auto;
+        }
+
+        .reel-author {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .reel-author-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+            font-weight: 600;
+            overflow-wrap: anywhere;
+        }
+
+        .reel-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: var(--divider);
+            color: #555;
+            display: grid;
+            place-items: center;
+            font-size: 13px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .follow-btn {
+            padding: 4px 10px;
+            border: 1px solid rgba(255, 255, 255, .7);
+            border-radius: 8px;
+            background: transparent;
+            color: #fff;
+            font: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .follow-btn:hover {
+            background: rgba(255, 255, 255, .15);
+        }
+
+        .reel-caption {
+            max-height: 84px;
+            overflow-y: auto;
+            line-height: 1.45;
+            overflow-wrap: anywhere;
+            scrollbar-width: none;
+            margin-bottom: 6px;
+        }
+
+        .reel-meta {
+            font-size: 12px;
+            color: rgba(255, 255, 255, .8);
+        }
+
+        /* ---------- Empty state ---------- */
+
+        .empty {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            text-align: center;
+            color: #fff;
+        }
+
+        .empty-icon {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            border: 2px solid currentColor;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+        }
+
+        .empty-icon .icon {
+            width: 38px;
+            height: 38px;
+            stroke-width: 1.5;
+        }
+
+        .empty h2 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .empty p {
+            color: rgba(255, 255, 255, .7);
+            margin-bottom: 20px;
+        }
+
+        .btn-primary {
+            display: inline-block;
+            padding: 9px 18px;
+            border-radius: 8px;
+            background: var(--blue);
+            color: #fff;
+            font-weight: 600;
+            transition: background .15s;
+        }
+
+        .btn-primary:hover {
+            background: var(--blue-hover);
+        }
+
+        /* ---------- Responsive ---------- */
+
+        @media (max-width: 1099px) {
+            :root {
+                --sidebar: 73px;
+            }
+
+            .sidebar-logo {
+                justify-content: center;
+                padding: 0;
+            }
+
+            .sidebar-logo .logo {
+                display: none;
+            }
+
+            .sidebar-logo .icon {
+                display: block;
+            }
+
+            .nav-link {
+                justify-content: center;
+            }
+
+            .nav-text {
+                display: none;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .sidebar {
+                display: none;
+            }
+
+            .reels {
+                margin-left: 0;
+                height: calc(100vh - 51px);
+                height: calc(100dvh - 51px - env(safe-area-inset-bottom));
+            }
+
+            .reels-header {
+                left: 0;
+            }
+
+            .reel-stage {
+                width: 100%;
+                aspect-ratio: auto;
+            }
+
+            .tabbar {
+                display: flex;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 50px;
+                box-sizing: content-box;
+                padding-bottom: env(safe-area-inset-bottom);
+                justify-content: space-around;
+                align-items: center;
+                background: var(--surface);
+                border-top: 1px solid var(--border);
+                z-index: 20;
+            }
+
+            .tabbar a {
+                display: grid;
+                place-items: center;
+                width: 48px;
+                height: 48px;
+            }
+
+            .tabbar .nav-avatar {
+                width: 26px;
+                height: 26px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <aside class="sidebar">
+        <a href="{% url 'post_list' %}" class="sidebar-logo" aria-label="Instagram">
+            <span class="logo">Instagram</span>
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.5 6.5h.01"/></svg>
+        </a>
+
+        <nav class="nav" aria-label="Main">
+            <a href="{% url 'post_list' %}" class="nav-link">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+                <span class="nav-text">Home</span>
+            </a>
+            <a href="{% url 'reels' %}" class="nav-link active" aria-current="page">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M3 8.5h18M8.5 3l3 5.5M14.5 3l3 5.5"/><path d="m10 12 4.5 2.75L10 17.5z"/></svg>
+                <span class="nav-text">Reels</span>
+            </a>
+            <a href="{% url 'post_create' %}" class="nav-link">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg>
+                <span class="nav-text">Create</span>
+            </a>
+            <a href="{% url 'profile' %}" class="nav-link">
+                {% if request.user.avatar %}
+                    <img class="nav-avatar" src="{{ request.user.avatar.url }}" alt="">
+                {% else %}
+                    <span class="nav-avatar">{{ request.user.username|first|upper }}</span>
+                {% endif %}
+                <span class="nav-text">Profile</span>
+            </a>
+        </nav>
+
+        <nav class="nav nav-bottom">
+            <a href="{% url 'logout' %}" class="nav-link">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h3a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3h-3M10 17l5-5-5-5M15 12H3"/></svg>
+                <span class="nav-text">Log out</span>
+            </a>
+        </nav>
+    </aside>
+
+    <header class="reels-header">
+        <h1>Reels</h1>
+        <a href="{% url 'post_create' %}?kind=reels" class="reels-add" aria-label="Share a reel" title="Share a reel">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg>
+        </a>
+    </header>
+
+    <main class="reels" id="reels" tabindex="0">
+        {% for reel in reel_list %}
+            {% with video=reel.media.all.0 %}
+                {% if video.media_type == 'video' %}
+                    <article class="reel is-paused" id="reel-{{ reel.id }}">
+                        <div class="reel-stage">
+                            <video class="reel-video" src="{{ video.file.url }}" loop muted playsinline preload="metadata"></video>
+
+                            <span class="reel-paused-icon" aria-hidden="true">
+                                <svg class="icon" viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></svg>
+                            </span>
+
+                            <div class="reel-info">
+                                <div class="reel-author">
+                                    <a href="{% url 'user_profile' reel.author_id %}" class="reel-author-link">
+                                        {% if reel.author.avatar %}
+                                            <img class="reel-avatar" src="{{ reel.author.avatar.url }}" alt="">
+                                        {% else %}
+                                            <span class="reel-avatar">{{ reel.author.username|first|upper }}</span>
+                                        {% endif %}
+                                        {{ reel.author.username }}
+                                    </a>
+                                    {% include 'follow-button.html' with target=reel.author %}
+                                </div>
+
+                                {% if reel.about %}
+                                    <p class="reel-caption">{{ reel.about|linebreaksbr }}</p>
+                                {% endif %}
+
+                                <p class="reel-meta">
+                                    {% if reel.location %}{{ reel.location }} • {% endif %}{{ reel.created_at|timesince }} ago
+                                </p>
+                            </div>
+
+                            <div class="reel-actions">
+                                <span class="reel-stat" title="Likes">
+                                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.8-4.6-9.4-9.6C1.5 7.4 3.7 4 7.2 4c2 0 3.6 1.1 4.8 2.8C13.2 5.1 14.8 4 16.8 4c3.5 0 5.7 3.4 4.6 6.9-1.6 5-9.4 9.6-9.4 9.6z"/></svg>
+                                    {{ reel.like_count }}
+                                </span>
+                                <button type="button" class="reel-sound is-muted" aria-label="Unmute">
+                                    <svg class="icon icon-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+                                    <svg class="icon icon-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9.5 5 5M21 9.5l-5 5"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </article>
+                {% endif %}
+            {% endwith %}
+        {% empty %}
+            <div class="empty">
+                <div class="empty-icon">
+                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M3 8.5h18M8.5 3l3 5.5M14.5 3l3 5.5"/><path d="m10 12 4.5 2.75L10 17.5z"/></svg>
+                </div>
+                <h2>No reels yet</h2>
+                <p>When people share reels, they'll appear here.</p>
+                <a href="{% url 'post_create' %}?kind=reels" class="btn-primary">Share a reel</a>
+            </div>
+        {% endfor %}
+    </main>
+
+    <nav class="tabbar" aria-label="Main">
+        <a href="{% url 'post_list' %}" aria-label="Home">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+        </a>
+        <a href="{% url 'reels' %}" class="active" aria-label="Reels" aria-current="page">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M3 8.5h18M8.5 3l3 5.5M14.5 3l3 5.5"/><path d="m10 12 4.5 2.75L10 17.5z"/></svg>
+        </a>
+        <a href="{% url 'post_create' %}" aria-label="Create">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg>
+        </a>
+        <a href="{% url 'profile' %}" aria-label="Profile">
+            {% if request.user.avatar %}
+                <img class="nav-avatar" src="{{ request.user.avatar.url }}" alt="">
+            {% else %}
+                <span class="nav-avatar">{{ request.user.username|first|upper }}</span>
+            {% endif %}
+        </a>
+    </nav>
+
+    <script>
+        const container = document.getElementById("reels");
+        const videos = document.querySelectorAll(".reel-video");
+        const soundButtons = document.querySelectorAll(".reel-sound");
+
+        function setMuted(muted) {
+            videos.forEach((video) => { video.muted = muted; });
+            soundButtons.forEach((button) => {
+                button.classList.toggle("is-muted", muted);
+                button.setAttribute("aria-label", muted ? "Unmute" : "Mute");
+            });
+        }
+
+        function playVideo(video) {
+            video.play().catch((error) => {
+                // Brauzer ovozli autoplay'ni bloklasa, ovozsiz qayta urinamiz
+                if (error.name === "NotAllowedError" && !video.muted) {
+                    setMuted(true);
+                    video.play().catch(() => {});
+                }
+            });
+        }
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    playVideo(entry.target);
+                } else {
+                    entry.target.pause();
+                    entry.target.currentTime = 0;
+                }
+            });
+        }, { threshold: 0.6 });
+
+        videos.forEach((video) => {
+            const reel = video.closest(".reel");
+            video.addEventListener("play", () => reel.classList.remove("is-paused"));
+            video.addEventListener("pause", () => reel.classList.add("is-paused"));
+            video.addEventListener("click", () => {
+                if (video.paused) {
+                    playVideo(video);
+                } else {
+                    video.pause();
+                }
+            });
+            observer.observe(video);
+        });
+
+        soundButtons.forEach((button) => {
+            button.addEventListener("click", () => setMuted(!button.classList.contains("is-muted")));
+        });
+
+        container.focus({ preventScroll: true });
+    </script>
+
+</body>
+</html>

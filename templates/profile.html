@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ request.user.username }} • Instagram</title>
+    <title>{{ profile_user.username }} • Instagram</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -148,7 +148,8 @@
             box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--text);
         }
 
-        a:focus-visible {
+        a:focus-visible,
+        button:focus-visible {
             outline: 2px solid var(--text);
             outline-offset: 2px;
         }
@@ -207,17 +208,50 @@
             min-width: 0;
         }
 
+        .profile-title {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px 16px;
+            margin-bottom: 18px;
+        }
+
         .profile-username {
             font-size: 20px;
             font-weight: 400;
             overflow-wrap: anywhere;
-            margin-bottom: 18px;
+        }
+
+        .follow-btn {
+            padding: 7px 16px;
+            border: none;
+            border-radius: 8px;
+            background: var(--blue);
+            color: #fff;
+            font: inherit;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background .15s;
+        }
+
+        .follow-btn:hover {
+            background: var(--blue-hover);
+        }
+
+        .follow-btn.is-following {
+            background: var(--divider);
+            color: var(--text);
+        }
+
+        .follow-btn.is-following:hover {
+            background: var(--border);
         }
 
         .stats {
             list-style: none;
             display: flex;
-            gap: 40px;
+            flex-wrap: wrap;
+            gap: 4px 40px;
             font-size: 16px;
             margin-bottom: 18px;
         }
@@ -241,6 +275,7 @@
         .tabs {
             display: flex;
             justify-content: center;
+            gap: 48px;
         }
 
         .tab {
@@ -249,11 +284,17 @@
             gap: 6px;
             height: 52px;
             margin-top: -1px;
-            border-top: 1px solid var(--text);
+            border-top: 1px solid transparent;
+            color: var(--muted);
             font-size: 12px;
             font-weight: 600;
             letter-spacing: 1px;
             text-transform: uppercase;
+        }
+
+        .tab.active {
+            border-top-color: var(--text);
+            color: var(--text);
         }
 
         .tab .icon {
@@ -283,6 +324,11 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        .tile-link {
+            position: absolute;
+            inset: 0;
         }
 
         .tile-badge {
@@ -492,12 +538,12 @@
                 font-size: 32px;
             }
 
-            .profile-username {
+            .profile-title {
                 margin-bottom: 10px;
             }
 
             .stats {
-                gap: 24px;
+                gap: 4px 16px;
                 font-size: 14px;
                 margin-bottom: 10px;
             }
@@ -526,11 +572,15 @@
                 <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
                 <span class="nav-text">Home</span>
             </a>
+            <a href="{% url 'reels' %}" class="nav-link">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M3 8.5h18M8.5 3l3 5.5M14.5 3l3 5.5"/><path d="m10 12 4.5 2.75L10 17.5z"/></svg>
+                <span class="nav-text">Reels</span>
+            </a>
             <a href="{% url 'post_create' %}" class="nav-link">
                 <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg>
                 <span class="nav-text">Create</span>
             </a>
-            <a href="{% url 'profile' %}" class="nav-link active" aria-current="page">
+            <a href="{% url 'profile' %}" class="nav-link{% if is_own %} active{% endif %}"{% if is_own %} aria-current="page"{% endif %}>
                 {% if request.user.avatar %}
                     <img class="nav-avatar" src="{{ request.user.avatar.url }}" alt="">
                 {% else %}
@@ -549,7 +599,7 @@
     </aside>
 
     <header class="topbar">
-        <span class="topbar-title">{{ request.user.username }}</span>
+        <span class="topbar-title">{{ profile_user.username }}</span>
         <a href="{% url 'logout' %}" class="icon-btn" aria-label="Log out">
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h3a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3h-3M10 17l5-5-5-5M15 12H3"/></svg>
         </a>
@@ -560,34 +610,45 @@
 
             <section class="profile-header">
                 <div class="profile-avatar">
-                    {% if request.user.avatar %}
-                        <img src="{{ request.user.avatar.url }}" alt="{{ request.user.username }}">
+                    {% if profile_user.avatar %}
+                        <img src="{{ profile_user.avatar.url }}" alt="{{ profile_user.username }}">
                     {% else %}
-                        <span>{{ request.user.username|first|upper }}</span>
+                        <span>{{ profile_user.username|first|upper }}</span>
                     {% endif %}
                 </div>
 
                 <div class="profile-info">
-                    <h1 class="profile-username">{{ request.user.username }}</h1>
+                    <div class="profile-title">
+                        <h1 class="profile-username">{{ profile_user.username }}</h1>
+                        {% include 'follow-button.html' with target=profile_user %}
+                    </div>
 
                     <ul class="stats">
-                        <li><strong>{{ posts|length }}</strong> post{{ posts|length|pluralize }}</li>
+                        <li><strong>{{ post_count }}</strong> post{{ post_count|pluralize }}</li>
+                        {% with followers=profile_user.count_follower following=profile_user.count_following %}
+                            <li><a href="{% url 'followers' profile_user.id %}"><strong>{{ followers }}</strong> follower{{ followers|pluralize }}</a></li>
+                            <li><a href="{% url 'following' profile_user.id %}"><strong>{{ following }}</strong> following</a></li>
+                        {% endwith %}
                     </ul>
 
-                    {% if request.user.first_name %}
-                        <p class="full-name">{{ request.user.first_name }}</p>
+                    {% if profile_user.first_name %}
+                        <p class="full-name">{{ profile_user.first_name }}</p>
                     {% endif %}
-                    {% if request.user.about %}
-                        <p class="about">{{ request.user.about|linebreaksbr }}</p>
+                    {% if profile_user.about %}
+                        <p class="about">{{ profile_user.about|linebreaksbr }}</p>
                     {% endif %}
                 </div>
             </section>
 
             <div class="tabs">
-                <span class="tab">
+                <a href="{{ request.path }}" class="tab{% if tab == 'posts' %} active{% endif %}">
                     <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg>
                     Posts
-                </span>
+                </a>
+                <a href="{{ request.path }}?tab=reels" class="tab{% if tab == 'reels' %} active{% endif %}">
+                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M3 8.5h18M8.5 3l3 5.5M14.5 3l3 5.5"/><path d="m10 12 4.5 2.75L10 17.5z"/></svg>
+                    Reels
+                </a>
             </div>
 
             {% if posts %}
@@ -619,6 +680,9 @@
                                     {{ post.views }}
                                 </span>
                             </div>
+                            {% if post.post_type == 'reels' %}
+                                <a href="{% url 'reels' %}#reel-{{ post.id }}" class="tile-link" aria-label="Open reel"></a>
+                            {% endif %}
                         </div>
                     {% endfor %}
                 </section>
@@ -627,9 +691,17 @@
                     <div class="empty-icon">
                         <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8a2 2 0 0 1 2-2h2.5l1.5-2h6l1.5 2H19a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.5"/></svg>
                     </div>
-                    <h2>Share photos</h2>
-                    <p>When you share photos, they will appear on your profile.</p>
-                    <a href="{% url 'post_create' %}">Share your first photo</a>
+                    {% if not is_own %}
+                        <h2>{% if tab == 'reels' %}No reels yet{% else %}No posts yet{% endif %}</h2>
+                    {% elif tab == 'reels' %}
+                        <h2>Share reels</h2>
+                        <p>When you share reels, they will appear on your profile.</p>
+                        <a href="{% url 'post_create' %}?kind=reels">Share your first reel</a>
+                    {% else %}
+                        <h2>Share photos</h2>
+                        <p>When you share photos, they will appear on your profile.</p>
+                        <a href="{% url 'post_create' %}">Share your first photo</a>
+                    {% endif %}
                 </div>
             {% endif %}
 
@@ -640,10 +712,13 @@
         <a href="{% url 'post_list' %}" aria-label="Home">
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
         </a>
+        <a href="{% url 'reels' %}" aria-label="Reels">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M3 8.5h18M8.5 3l3 5.5M14.5 3l3 5.5"/><path d="m10 12 4.5 2.75L10 17.5z"/></svg>
+        </a>
         <a href="{% url 'post_create' %}" aria-label="Create">
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg>
         </a>
-        <a href="{% url 'profile' %}" class="active" aria-label="Profile" aria-current="page">
+        <a href="{% url 'profile' %}"{% if is_own %} class="active" aria-current="page"{% endif %} aria-label="Profile">
             {% if request.user.avatar %}
                 <img class="nav-avatar" src="{{ request.user.avatar.url }}" alt="">
             {% else %}

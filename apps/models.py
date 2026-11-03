@@ -21,11 +21,11 @@ class User(AbstractUser):
 
     @property
     def count_follower(self):
-        return self.followers.count
+        return self.followers.count()
 
     @property
     def count_following(self):
-        self.following.count
+        return self.following.count()
 
 
 class Follow(models.Model):

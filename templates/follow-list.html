@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ profile_user.username }} • {{ relation|capfirst }}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Grand+Hotel&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --surface: #ffffff;
+            --text: #262626;
+            --muted: #737373;
+            --border: #dbdbdb;
+            --divider: #efefef;
+            --blue: #0095f6;
+            --blue-hover: #1877f2;
+            --sidebar: 245px;
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--surface);
+            color: var(--text);
+            font-size: 14px;
+            line-height: 1.4;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        img {
+            display: block;
+            max-width: 100%;
+        }
+
+        .icon {
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .logo {
+            font-family: 'Grand Hotel', cursive;
+            font-size: 32px;
+            font-weight: 400;
+            line-height: 1;
+        }
+
+        /* ---------- Navigation ---------- */
+
+        .sidebar {
+            position: fixed;
+            inset: 0 auto 0 0;
+            width: var(--sidebar);
+            padding: 26px 12px 20px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 20;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            height: 48px;
+            padding: 0 12px;
+            margin-bottom: 28px;
+        }
+
+        .sidebar-logo .icon {
+            display: none;
+        }
+
+        .nav {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .nav-bottom {
+            margin-top: auto;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: background .15s;
+        }
+
+        .nav-link:hover {
+            background: #f2f2f2;
+        }
+
+        .nav-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: var(--divider);
+            display: grid;
+            place-items: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: #555;
+            flex-shrink: 0;
+        }
+
+        a:focus-visible,
+        button:focus-visible {
+            outline: 2px solid var(--text);
+            outline-offset: 2px;
+        }
+
+        .tabbar {
+            display: none;
+        }
+
+        .main {
+            margin-left: var(--sidebar);
+            min-height: 100vh;
+            padding: 32px 24px 56px;
+        }
+
+        /* ---------- Follow list ---------- */
+
+        .follow-page {
+            max-width: 470px;
+            margin: 0 auto;
+        }
+
+        .follow-heading {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            font-size: 18px;
+            font-weight: 700;
+            overflow-wrap: anywhere;
+        }
+
+        .back-link {
+            display: grid;
+            place-items: center;
+            width: 36px;
+            height: 36px;
+            flex-shrink: 0;
+        }
+
+        .follow-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .follow-tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            color: var(--muted);
+            font-weight: 600;
+            margin-bottom: -1px;
+            border-bottom: 1px solid transparent;
+        }
+
+        .follow-tab.active {
+            color: var(--text);
+            border-bottom-color: var(--text);
+        }
+
+        .user-list {
+            list-style: none;
+            padding-top: 8px;
+        }
+
+        .user-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 8px 0;
+        }
+
+        .user-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .user-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: var(--divider);
+            color: #555;
+            display: grid;
+            place-items: center;
+            font-size: 16px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .user-names {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            overflow-wrap: anywhere;
+        }
+
+        .user-username {
+            font-weight: 600;
+        }
+
+        .user-fullname {
+            color: var(--muted);
+        }
+
+        .follow-btn {
+            padding: 7px 16px;
+            border: none;
+            border-radius: 8px;
+            background: var(--blue);
+            color: #fff;
+            font: inherit;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background .15s;
+        }
+
+        .follow-btn:hover {
+            background: var(--blue-hover);
+        }
+
+        .follow-btn.is-following {
+            background: var(--divider);
+            color: var(--text);
+        }
+
+        .follow-btn.is-following:hover {
+            background: var(--border);
+        }
+
+        .empty {
+            text-align: center;
+            padding: 56px 24px;
+            color: var(--muted);
+        }
+
+        /* ---------- Responsive ---------- */
+
+        @media (max-width: 1099px) {
+            :root {
+                --sidebar: 73px;
+            }
+
+            .sidebar-logo {
+                justify-content: center;
+                padding: 0;
+            }
+
+            .sidebar-logo .logo {
+                display: none;
+            }
+
+            .sidebar-logo .icon {
+                display: block;
+            }
+
+            .nav-link {
+                justify-content: center;
+            }
+
+            .nav-text {
+                display: none;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .sidebar {
+                display: none;
+            }
+
+            .main {
+                margin-left: 0;
+                padding: 16px 16px 64px;
+            }
+
+            .tabbar {
+                display: flex;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 50px;
+                box-sizing: content-box;
+                padding-bottom: env(safe-area-inset-bottom);
+                justify-content: space-around;
+                align-items: center;
+                background: var(--surface);
+                border-top: 1px solid var(--border);
+                z-index: 20;
+            }
+
+            .tabbar a {
+                display: grid;
+                place-items: center;
+                width: 48px;
+                height: 48px;
+            }
+
+            .tabbar .nav-avatar {
+                width: 26px;
+                height: 26px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <aside class="sidebar">
+        <a href="{% url 'post_list' %}" class="sidebar-logo" aria-label="Instagram">
+            <span class="logo">Instagram</span>
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.5 6.5h.01"/></svg>
+        </a>
+
+        <nav class="nav" aria-label="Main">
+            <a href="{% url 'post_list' %}" class="nav-link">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+                <span class="nav-text">Home</span>
+            </a>
+            <a href="{% url 'reels' %}" class="nav-link">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M3 8.5h18M8.5 3l3 5.5M14.5 3l3 5.5"/><path d="m10 12 4.5 2.75L10 17.5z"/></svg>
+                <span class="nav-text">Reels</span>
+            </a>
+            <a href="{% url 'post_create' %}" class="nav-link">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg>
+                <span class="nav-text">Create</span>
+            </a>
+            <a href="{% url 'profile' %}" class="nav-link">
+                {% if request.user.avatar %}
+                    <img class="nav-avatar" src="{{ request.user.avatar.url }}" alt="">
+                {% else %}
+                    <span class="nav-avatar">{{ request.user.username|first|upper }}</span>
+                {% endif %}
+                <span class="nav-text">Profile</span>
+            </a>
+        </nav>
+
+        <nav class="nav nav-bottom">
+            <a href="{% url 'logout' %}" class="nav-link">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h3a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3h-3M10 17l5-5-5-5M15 12H3"/></svg>
+                <span class="nav-text">Log out</span>
+            </a>
+        </nav>
+    </aside>
+
+    <main class="main">
+        <div class="follow-page">
+
+            <h1 class="follow-heading">
+                <a href="{% url 'user_profile' profile_user.id %}" class="back-link" aria-label="Back to profile">
+                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+                </a>
+                {{ profile_user.username }}
+            </h1>
+
+            <div class="follow-tabs">
+                <a href="{% url 'followers' profile_user.id %}" class="follow-tab{% if relation == 'followers' %} active{% endif %}">Followers</a>
+                <a href="{% url 'following' profile_user.id %}" class="follow-tab{% if relation == 'following' %} active{% endif %}">Following</a>
+            </div>
+
+            {% if users %}
+                <ul class="user-list">
+                    {% for item in users %}
+                        <li class="user-row">
+                            <a href="{% url 'user_profile' item.id %}" class="user-link">
+                                {% if item.avatar %}
+                                    <img class="user-avatar" src="{{ item.avatar.url }}" alt="">
+                                {% else %}
+                                    <span class="user-avatar">{{ item.username|first|upper }}</span>
+                                {% endif %}
+                                <span class="user-names">
+                                    <span class="user-username">{{ item.username }}</span>
+                                    {% if item.first_name %}<span class="user-fullname">{{ item.first_name }}</span>{% endif %}
+                                </span>
+                            </a>
+                            {% include 'follow-button.html' with target=item %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="empty">
+                    {% if relation == 'followers' %}No followers yet.{% else %}Not following anyone yet.{% endif %}
+                </p>
+            {% endif %}
+
+        </div>
+    </main>
+
+    <nav class="tabbar" aria-label="Main">
+        <a href="{% url 'post_list' %}" aria-label="Home">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+        </a>
+        <a href="{% url 'reels' %}" aria-label="Reels">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M3 8.5h18M8.5 3l3 5.5M14.5 3l3 5.5"/><path d="m10 12 4.5 2.75L10 17.5z"/></svg>
+        </a>
+        <a href="{% url 'post_create' %}" aria-label="Create">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg>
+        </a>
+        <a href="{% url 'profile' %}" aria-label="Profile">
+            {% if request.user.avatar %}
+                <img class="nav-avatar" src="{{ request.user.avatar.url }}" alt="">
+            {% else %}
+                <span class="nav-avatar">{{ request.user.username|first|upper }}</span>
+            {% endif %}
+        </a>
+    </nav>
+
+</body>
+</html>
