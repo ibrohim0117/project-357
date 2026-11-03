@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ request.user.username }} • Instagram</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Grand+Hotel&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #fafafa;
+            --surface: #ffffff;
+            --text: #262626;
+            --muted: #737373;
+            --border: #dbdbdb;
+            --divider: #efefef;
+            --blue: #0095f6;
+            --blue-hover: #1877f2;
+            --ring: linear-gradient(45deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5);
+            --sidebar: 245px;
+        }
+
+        html {
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--surface);
+            color: var(--text);
+            font-size: 14px;
+            line-height: 1.4;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        img {
+            display: block;
+            max-width: 100%;
+        }
+
+        .icon {
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .logo {
+            font-family: 'Grand Hotel', cursive;
+            font-size: 32px;
+            font-weight: 400;
+            line-height: 1;
+        }
+
+        /* ---------- Navigation ---------- */
+
+        .sidebar {
+            position: fixed;
+            inset: 0 auto 0 0;
+            width: var(--sidebar);
+            padding: 26px 12px 20px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 20;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            height: 48px;
+            padding: 0 12px;
+            margin-bottom: 28px;
+        }
+
+        .sidebar-logo .icon {
+            display: none;
+        }
+
+        .nav {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .nav-bottom {
+            margin-top: auto;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: background .15s;
+        }
+
+        .nav-link:hover {
+            background: #f2f2f2;
+        }
+
+        .nav-link.active {
+            font-weight: 700;
+        }
+
+        .nav-link.active .icon,
+        .tabbar a.active .icon {
+            stroke-width: 2.6;
+        }
+
+        .nav-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: var(--divider);
+            display: grid;
+            place-items: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: #555;
+            flex-shrink: 0;
+        }
+
+        .active .nav-avatar {
+            box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--text);
+        }
+
+        a:focus-visible {
+            outline: 2px solid var(--text);
+            outline-offset: 2px;
+        }
+
+        .topbar,
+        .tabbar {
+            display: none;
+        }
+
+        .main {
+            margin-left: var(--sidebar);
+            min-height: 100vh;
+            padding: 32px 24px 56px;
+        }
+
+        /* ---------- Profile header ---------- */
+
+        .profile {
+            max-width: 935px;
+            margin: 0 auto;
+        }
+
+        .profile-header {
+            display: grid;
+            grid-template-columns: minmax(120px, 290px) 1fr;
+            align-items: center;
+            gap: 24px;
+            padding: 8px 0 44px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .profile-avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            padding: 4px;
+            background: var(--ring);
+            justify-self: center;
+        }
+
+        .profile-avatar > * {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 4px solid var(--surface);
+            background: var(--divider);
+            object-fit: cover;
+            display: grid;
+            place-items: center;
+            font-size: 56px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .profile-info {
+            min-width: 0;
+        }
+
+        .profile-username {
+            font-size: 20px;
+            font-weight: 400;
+            overflow-wrap: anywhere;
+            margin-bottom: 18px;
+        }
+
+        .stats {
+            list-style: none;
+            display: flex;
+            gap: 40px;
+            font-size: 16px;
+            margin-bottom: 18px;
+        }
+
+        .stats strong {
+            font-weight: 600;
+        }
+
+        .full-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .about {
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        /* ---------- Tabs ---------- */
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+        }
+
+        .tab {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            height: 52px;
+            margin-top: -1px;
+            border-top: 1px solid var(--text);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .tab .icon {
+            width: 12px;
+            height: 12px;
+            stroke-width: 2.4;
+        }
+
+        /* ---------- Posts grid ---------- */
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+        }
+
+        .tile {
+            position: relative;
+            aspect-ratio: 1 / 1;
+            background: var(--divider);
+            overflow: hidden;
+        }
+
+        .tile img,
+        .tile video {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .tile-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            color: #fff;
+            filter: drop-shadow(0 0 2px rgba(0, 0, 0, .6));
+            pointer-events: none;
+        }
+
+        .tile-badge .icon {
+            width: 20px;
+            height: 20px;
+            stroke-width: 2;
+        }
+
+        .tile-badge.is-video .icon {
+            fill: currentColor;
+            stroke: none;
+        }
+
+        .tile-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 28px;
+            background: rgba(0, 0, 0, .35);
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            opacity: 0;
+            transition: opacity .15s;
+        }
+
+        .tile:hover .tile-overlay {
+            opacity: 1;
+        }
+
+        .tile-overlay span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .tile-overlay .icon {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+            stroke: none;
+        }
+
+        /* ---------- Empty state ---------- */
+
+        .empty {
+            text-align: center;
+            padding: 60px 24px;
+        }
+
+        .empty-icon {
+            width: 62px;
+            height: 62px;
+            margin: 0 auto 16px;
+            border: 2px solid var(--text);
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+        }
+
+        .empty-icon .icon {
+            width: 30px;
+            height: 30px;
+            stroke-width: 1.5;
+        }
+
+        .empty h2 {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .empty p {
+            color: var(--muted);
+            margin-bottom: 16px;
+        }
+
+        .empty a {
+            color: var(--blue);
+            font-weight: 600;
+        }
+
+        .empty a:hover {
+            color: var(--blue-hover);
+        }
+
+        /* ---------- Responsive ---------- */
+
+        @media (max-width: 1099px) {
+            :root {
+                --sidebar: 73px;
+            }
+
+            .sidebar-logo {
+                justify-content: center;
+                padding: 0;
+            }
+
+            .sidebar-logo .logo {
+                display: none;
+            }
+
+            .sidebar-logo .icon {
+                display: block;
+            }
+
+            .nav-link {
+                justify-content: center;
+            }
+
+            .nav-text {
+                display: none;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .sidebar {
+                display: none;
+            }
+
+            .main {
+                margin-left: 0;
+                padding: 60px 0 64px;
+            }
+
+            .topbar {
+                display: flex;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 60px;
+                padding: 0 8px 0 16px;
+                align-items: center;
+                justify-content: space-between;
+                background: var(--surface);
+                border-bottom: 1px solid var(--border);
+                z-index: 20;
+            }
+
+            .topbar-title {
+                font-size: 16px;
+                font-weight: 700;
+            }
+
+            .icon-btn {
+                display: grid;
+                place-items: center;
+                width: 44px;
+                height: 44px;
+                border-radius: 50%;
+            }
+
+            .tabbar {
+                display: flex;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 50px;
+                box-sizing: content-box;
+                padding-bottom: env(safe-area-inset-bottom);
+                justify-content: space-around;
+                align-items: center;
+                background: var(--surface);
+                border-top: 1px solid var(--border);
+                z-index: 20;
+            }
+
+            .tabbar a {
+                display: grid;
+                place-items: center;
+                width: 48px;
+                height: 48px;
+            }
+
+            .tabbar .nav-avatar {
+                width: 26px;
+                height: 26px;
+            }
+
+            .profile-header {
+                grid-template-columns: auto 1fr;
+                gap: 24px;
+                padding: 24px 16px;
+            }
+
+            .profile-avatar {
+                width: 86px;
+                height: 86px;
+                padding: 3px;
+            }
+
+            .profile-avatar > * {
+                border-width: 3px;
+                font-size: 32px;
+            }
+
+            .profile-username {
+                margin-bottom: 10px;
+            }
+
+            .stats {
+                gap: 24px;
+                font-size: 14px;
+                margin-bottom: 10px;
+            }
+
+            .grid {
+                gap: 2px;
+            }
+
+            .tile-overlay {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <aside class="sidebar">
+        <a href="{% url 'post_list' %}" class="sidebar-logo" aria-label="Instagram">
+            <span class="logo">Instagram</span>
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.5 6.5h.01"/></svg>
+        </a>
+
+        <nav class="nav" aria-label="Main">
+            <a href="{% url 'post_list' %}" class="nav-link">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+                <span class="nav-text">Home</span>
+            </a>
+            <a href="{% url 'post_create' %}" class="nav-link">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg>
+                <span class="nav-text">Create</span>
+            </a>
+            <a href="{% url 'profile' %}" class="nav-link active" aria-current="page">
+                {% if request.user.avatar %}
+                    <img class="nav-avatar" src="{{ request.user.avatar.url }}" alt="">
+                {% else %}
+                    <span class="nav-avatar">{{ request.user.username|first|upper }}</span>
+                {% endif %}
+                <span class="nav-text">Profile</span>
+            </a>
+        </nav>
+
+        <nav class="nav nav-bottom">
+            <a href="{% url 'logout' %}" class="nav-link">
+                <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h3a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3h-3M10 17l5-5-5-5M15 12H3"/></svg>
+                <span class="nav-text">Log out</span>
+            </a>
+        </nav>
+    </aside>
+
+    <header class="topbar">
+        <span class="topbar-title">{{ request.user.username }}</span>
+        <a href="{% url 'logout' %}" class="icon-btn" aria-label="Log out">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h3a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3h-3M10 17l5-5-5-5M15 12H3"/></svg>
+        </a>
+    </header>
+
+    <main class="main">
+        <div class="profile">
+
+            <section class="profile-header">
+                <div class="profile-avatar">
+                    {% if request.user.avatar %}
+                        <img src="{{ request.user.avatar.url }}" alt="{{ request.user.username }}">
+                    {% else %}
+                        <span>{{ request.user.username|first|upper }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="profile-info">
+                    <h1 class="profile-username">{{ request.user.username }}</h1>
+
+                    <ul class="stats">
+                        <li><strong>{{ posts|length }}</strong> post{{ posts|length|pluralize }}</li>
+                    </ul>
+
+                    {% if request.user.first_name %}
+                        <p class="full-name">{{ request.user.first_name }}</p>
+                    {% endif %}
+                    {% if request.user.about %}
+                        <p class="about">{{ request.user.about|linebreaksbr }}</p>
+                    {% endif %}
+                </div>
+            </section>
+
+            <div class="tabs">
+                <span class="tab">
+                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg>
+                    Posts
+                </span>
+            </div>
+
+            {% if posts %}
+                <section class="grid">
+                    {% for post in posts %}
+                        <div class="tile">
+                            {% with cover=post.media.all.0 %}
+                                {% if cover.media_type == 'video' %}
+                                    <video src="{{ cover.file.url }}#t=0.1" muted playsinline preload="metadata"></video>
+                                {% elif cover %}
+                                    <img src="{{ cover.file.url }}" alt="{{ post.about|default:'Post'|truncatechars:80 }}" loading="lazy">
+                                {% endif %}
+                            {% endwith %}
+
+                            {% if post.post_type == 'carousel' %}
+                                <span class="tile-badge" title="Carousel"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg></span>
+                            {% elif post.post_type == 'reels' %}
+                                <span class="tile-badge" title="Reels"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M3 8.5h18M8.5 3l3 5.5M14.5 3l3 5.5"/><path d="m10 12 4.5 2.75L10 17.5z"/></svg></span>
+                            {% elif post.post_type == 'video' %}
+                                <span class="tile-badge is-video" title="Video"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5z"/></svg></span>
+                            {% endif %}
+                            <div class="tile-overlay">
+                                <span>
+                                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.8-4.6-9.4-9.6C1.5 7.4 3.7 4 7.2 4c2 0 3.6 1.1 4.8 2.8C13.2 5.1 14.8 4 16.8 4c3.5 0 5.7 3.4 4.6 6.9-1.6 5-9.4 9.6-9.4 9.6z"/></svg>
+                                    {{ post.like_count }}
+                                </span>
+                                <span>
+                                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5C5.5 4.5 1.5 12 1.5 12s4 7.5 10.5 7.5S22.5 12 22.5 12 18.5 4.5 12 4.5zm0 11a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg>
+                                    {{ post.views }}
+                                </span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </section>
+            {% else %}
+                <div class="empty">
+                    <div class="empty-icon">
+                        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8a2 2 0 0 1 2-2h2.5l1.5-2h6l1.5 2H19a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.5"/></svg>
+                    </div>
+                    <h2>Share photos</h2>
+                    <p>When you share photos, they will appear on your profile.</p>
+                    <a href="{% url 'post_create' %}">Share your first photo</a>
+                </div>
+            {% endif %}
+
+        </div>
+    </main>
+
+    <nav class="tabbar" aria-label="Main">
+        <a href="{% url 'post_list' %}" aria-label="Home">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+        </a>
+        <a href="{% url 'post_create' %}" aria-label="Create">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M12 8v8M8 12h8"/></svg>
+        </a>
+        <a href="{% url 'profile' %}" class="active" aria-label="Profile" aria-current="page">
+            {% if request.user.avatar %}
+                <img class="nav-avatar" src="{{ request.user.avatar.url }}" alt="">
+            {% else %}
+                <span class="nav-avatar">{{ request.user.username|first|upper }}</span>
+            {% endif %}
+        </a>
+    </nav>
+
+</body>
+</html>
