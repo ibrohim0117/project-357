@@ -1,0 +1,39 @@
+{% with page=request.resolver_match.url_name %}
+<aside class="sidebar">
+    <a href="{% url 'post_list' %}" class="sidebar-logo" aria-label="Instagram">
+        <span class="logo">Instagram</span>
+        <svg class="icon" aria-hidden="true"><use href="#i-logo"/></svg>
+    </a>
+
+    <nav class="nav" aria-label="Main">
+        <a href="{% url 'post_list' %}" class="nav-link{% if page == 'post_list' %} active{% endif %}"{% if page == 'post_list' %} aria-current="page"{% endif %}>
+            <svg class="icon" aria-hidden="true"><use href="#i-home"/></svg>
+            <span class="nav-text">Home</span>
+        </a>
+        <a href="{% url 'reels' %}" class="nav-link{% if page == 'reels' %} active{% endif %}"{% if page == 'reels' %} aria-current="page"{% endif %}>
+            <svg class="icon" aria-hidden="true"><use href="#i-reels"/></svg>
+            <span class="nav-text">Reels</span>
+        </a>
+        <a href="{% url 'post_create' %}" class="nav-link{% if page == 'post_create' %} active{% endif %}"{% if page == 'post_create' %} aria-current="page"{% endif %}>
+            <svg class="icon" aria-hidden="true"><use href="#i-create"/></svg>
+            <span class="nav-text">Create</span>
+        </a>
+        <a href="{% url 'profile' %}" class="nav-link{% if is_own %} active{% endif %}"{% if is_own %} aria-current="page"{% endif %}>
+            {% include 'partials/avatar.html' with person=request.user %}
+            <span class="nav-text">Profile</span>
+        </a>
+    </nav>
+
+    <nav class="nav nav-bottom" aria-label="Account">
+        <button type="button" class="nav-link" data-theme-toggle>
+            <svg class="icon icon-moon" aria-hidden="true"><use href="#i-moon"/></svg>
+            <svg class="icon icon-sun" aria-hidden="true"><use href="#i-sun"/></svg>
+            <span class="nav-text">Appearance</span>
+        </button>
+        <a href="{% url 'logout' %}" class="nav-link">
+            <svg class="icon" aria-hidden="true"><use href="#i-logout"/></svg>
+            <span class="nav-text">Log out</span>
+        </a>
+    </nav>
+</aside>
+{% endwith %}

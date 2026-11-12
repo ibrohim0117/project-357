@@ -1,0 +1,256 @@
+.profile {
+    max-width: 935px;
+    margin: 0 auto;
+}
+
+/* ---------- Header ---------- */
+
+.profile-header {
+    display: grid;
+    grid-template-columns: minmax(120px, 290px) 1fr;
+    align-items: center;
+    gap: 24px;
+    padding: 8px 0 44px;
+    border-bottom: 1px solid var(--border);
+}
+
+.profile-avatar {
+    justify-self: center;
+    padding: 4px;
+}
+
+.profile-avatar .avatar {
+    --size: 142px;
+    border-width: 4px;
+}
+
+.profile-info {
+    min-width: 0;
+}
+
+.profile-title {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    margin-bottom: 20px;
+}
+
+.profile-username {
+    font-size: 20px;
+    font-weight: 400;
+    overflow-wrap: anywhere;
+}
+
+.stats {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 40px;
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+.stats strong {
+    font-weight: 600;
+}
+
+.stats a {
+    transition: opacity .15s;
+}
+
+.stats a:hover {
+    opacity: .65;
+}
+
+.full-name {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.about {
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.website {
+    display: inline-block;
+    margin-top: 4px;
+    color: var(--link);
+    font-weight: 600;
+}
+
+.website:hover {
+    text-decoration: underline;
+}
+
+/* ---------- Tabs ---------- */
+
+.tabs {
+    display: flex;
+    justify-content: center;
+    gap: 56px;
+}
+
+.tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 52px;
+    margin-top: -1px;
+    border-top: 1px solid transparent;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: color .15s;
+}
+
+.tab:hover,
+.tab.active {
+    color: var(--text);
+}
+
+.tab.active {
+    border-top-color: var(--text);
+}
+
+.tab .icon {
+    width: 12px;
+    height: 12px;
+    stroke-width: 2.4;
+}
+
+/* ---------- Grid ---------- */
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+}
+
+.tile {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border-radius: 4px;
+    background: var(--fill);
+    overflow: hidden;
+}
+
+.tile img,
+.tile video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform .35s ease;
+}
+
+.tile:hover img,
+.tile:hover video {
+    transform: scale(1.04);
+}
+
+.tile-link {
+    position: absolute;
+    inset: 0;
+}
+
+.tile-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    color: #fff;
+    filter: drop-shadow(0 0 2px rgba(0, 0, 0, .6));
+    pointer-events: none;
+}
+
+.tile-badge .icon {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2;
+}
+
+.tile-badge.is-video .icon {
+    fill: currentColor;
+    stroke: none;
+}
+
+.tile-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    background: rgba(0, 0, 0, .35);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s;
+}
+
+.tile:hover .tile-overlay {
+    opacity: 1;
+}
+
+.tile-overlay span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.tile-overlay .icon {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+    stroke: none;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 767px) {
+    .profile-header {
+        grid-template-columns: auto 1fr;
+        gap: 24px;
+        padding: 24px 16px;
+    }
+
+    .profile-avatar {
+        padding: 3px;
+    }
+
+    .profile-avatar .avatar {
+        --size: 80px;
+        border-width: 3px;
+    }
+
+    .profile-title {
+        margin-bottom: 10px;
+    }
+
+    .stats {
+        gap: 4px 16px;
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+
+    .tabs {
+        gap: 0;
+        justify-content: space-around;
+    }
+
+    .grid {
+        gap: 2px;
+    }
+
+    .tile {
+        border-radius: 0;
+    }
+
+    .tile-overlay {
+        display: none;
+    }
+}

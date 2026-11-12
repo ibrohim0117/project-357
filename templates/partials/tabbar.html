@@ -1,0 +1,16 @@
+{% with page=request.resolver_match.url_name %}
+<nav class="tabbar" aria-label="Main">
+    <a href="{% url 'post_list' %}" aria-label="Home"{% if page == 'post_list' %} class="active" aria-current="page"{% endif %}>
+        <svg class="icon" aria-hidden="true"><use href="#i-home"/></svg>
+    </a>
+    <a href="{% url 'reels' %}" aria-label="Reels"{% if page == 'reels' %} class="active" aria-current="page"{% endif %}>
+        <svg class="icon" aria-hidden="true"><use href="#i-reels"/></svg>
+    </a>
+    <a href="{% url 'post_create' %}" aria-label="Create"{% if page == 'post_create' %} class="active" aria-current="page"{% endif %}>
+        <svg class="icon" aria-hidden="true"><use href="#i-create"/></svg>
+    </a>
+    <a href="{% url 'profile' %}" aria-label="Profile"{% if is_own %} class="active" aria-current="page"{% endif %}>
+        {% include 'partials/avatar.html' with person=request.user %}
+    </a>
+</nav>
+{% endwith %}

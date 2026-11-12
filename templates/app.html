@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block body %}
+    {% include 'partials/icons.html' %}
+    {% include 'partials/sidebar.html' %}
+
+    {% block topbar %}
+        <header class="topbar">
+            {% block topbar_title %}
+                <a href="{% url 'post_list' %}" class="logo">Instagram</a>
+            {% endblock %}
+            <div class="topbar-actions">
+                <button type="button" class="icon-btn" data-theme-toggle aria-label="Switch appearance">
+                    <svg class="icon icon-moon" aria-hidden="true"><use href="#i-moon"/></svg>
+                    <svg class="icon icon-sun" aria-hidden="true"><use href="#i-sun"/></svg>
+                </button>
+                <a href="{% url 'logout' %}" class="icon-btn" aria-label="Log out">
+                    <svg class="icon" aria-hidden="true"><use href="#i-logout"/></svg>
+                </a>
+            </div>
+        </header>
+    {% endblock %}
+
+    {% block main %}
+        <main class="main">
+            {% block content %}{% endblock %}
+        </main>
+    {% endblock %}
+
+    {% include 'partials/tabbar.html' %}
+
+    <script>
+        document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
+            button.addEventListener("click", () => {
+                const root = document.documentElement;
+                const isDark = root.dataset.theme
+                    ? root.dataset.theme === "dark"
+                    : matchMedia("(prefers-color-scheme: dark)").matches;
+                root.dataset.theme = isDark ? "light" : "dark";
+                try { localStorage.setItem("theme", root.dataset.theme); } catch (e) {}
+            });
+        });
+    </script>
+{% endblock %}
