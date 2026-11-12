@@ -28,6 +28,7 @@
     --blue-hover: #1877f2;
     --blue-soft: #e8f4fe;
     --link: #00376b;
+    --like: #ff3040;
     --error: #ed4956;
     --error-bg: #fdecee;
     --error-border: #f7c6cd;
@@ -228,6 +229,52 @@ select {
 
 .icon-btn:hover {
     background: var(--hover);
+}
+
+.action-btn {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+    transition: opacity .15s, transform .1s;
+}
+
+.action-btn:hover {
+    opacity: .6;
+}
+
+.action-btn:active {
+    transform: scale(.88);
+}
+
+.like-btn[aria-pressed="true"] {
+    color: var(--like);
+}
+
+.like-btn[aria-pressed="true"]:hover {
+    opacity: 1;
+}
+
+.like-btn[aria-pressed="true"] .icon {
+    fill: currentColor;
+}
+
+.like-btn.is-popping .icon {
+    animation: like-pop .4s ease-out;
+}
+
+@keyframes like-pop {
+    40% {
+        transform: scale(1.25);
+    }
+    70% {
+        transform: scale(.92);
+    }
 }
 
 /* ---------- Avatar ---------- */

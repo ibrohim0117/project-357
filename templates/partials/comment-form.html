@@ -1,0 +1,7 @@
+<form method="post" class="comment-form" action="{% url 'comment_create' post.id %}">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}#post-{{ post.id }}">
+    <input type="text" name="text" class="comment-input" placeholder="Add a comment…"
+           maxlength="2200" autocomplete="off" aria-label="Add a comment" required>
+    <button type="submit" class="comment-submit">Post</button>
+</form>

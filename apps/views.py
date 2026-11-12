@@ -6,15 +6,17 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.db import IntegrityError, transaction
-from django.db.models import Count
-from django.http import HttpResponse, HttpResponseRedirect, StreamingHttpResponse
+from django.db.models import Count, Exists, OuterRef, Prefetch
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils.dateparse import parse_date
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 from django.views.static import serve
 
-from .models import Follow, Post, PostMedia, User
+from .models import Comment, Follow, Like, Post, PostMedia, User
 
 
 def login_view(request):
@@ -117,14 +119,26 @@ def register_view(request):
     return redirect('post_list')
 
 
-@login_required(login_url='login')
-def posts_view(request):
-    tab = 'following' if request.GET.get('tab') == 'following' else 'all'
-    post_list = (
+def _post_list(user):
+    # Ikkita Count bitta so'rovda JOIN'lar tufayli bir-birini ko'paytirib yubormasligi uchun distinct=True
+    return (
         Post.objects.filter(is_archived=False)
         .select_related('author')
         .prefetch_related('media')
-        .annotate(like_count=Count('likes'))
+        .annotate(
+            like_count=Count('likes', distinct=True),
+            comment_count=Count('comments', distinct=True),
+            is_liked=Exists(Like.objects.filter(post=OuterRef('pk'), author=user)),
+        )
+    )
+
+
+@login_required(login_url='login')
+def posts_view(request):
+    tab = 'following' if request.GET.get('tab') == 'following' else 'all'
+    recent_comments = Comment.objects.select_related('author').order_by('-created_at')[:2]
+    post_list = _post_list(request.user).prefetch_related(
+        Prefetch('comments', queryset=recent_comments, to_attr='recent_comments'),
     )
     if tab == 'following':
         post_list = post_list.filter(author__in=request.user.following.all())
@@ -132,17 +146,77 @@ def posts_view(request):
 
 
 @login_required(login_url='login')
+def post_detail_view(request, post_id):
+    post = get_object_or_404(_post_list(request.user), pk=post_id)
+    return render(request, 'post-detail.html', context={
+        'post': post,
+        'comments': post.comments.select_related('author'),
+        'following_ids': _following_ids(request.user),
+    })
+
+
+@login_required(login_url='login')
 def reels_view(request):
-    reel_list = (
-        Post.objects.filter(post_type=Post.PostType.REELS, is_archived=False)
-        .select_related('author')
-        .prefetch_related('media')
-        .annotate(like_count=Count('likes'))
-    )
+    reel_list = _post_list(request.user).filter(post_type=Post.PostType.REELS)
     return render(request, 'reels.html', context={
         'reel_list': reel_list,
         'following_ids': _following_ids(request.user),
     })
+
+
+@login_required(login_url='login')
+@require_POST
+def like_view(request, post_id):
+    post = get_object_or_404(Post, pk=post_id, is_archived=False)
+    Like.objects.get_or_create(author=request.user, post=post)
+    return _like_response(request, post)
+
+
+@login_required(login_url='login')
+@require_POST
+def unlike_view(request, post_id):
+    post = get_object_or_404(Post, pk=post_id, is_archived=False)
+    Like.objects.filter(author=request.user, post=post).delete()
+    return _like_response(request, post)
+
+
+def _like_response(request, post):
+    if _wants_json(request):
+        return JsonResponse({
+            'liked': post.likes.filter(author=request.user).exists(),
+            'like_count': post.likes.count(),
+        })
+    return _redirect_back(request, reverse('post_detail', args=[post.id]))
+
+
+@login_required(login_url='login')
+@require_POST
+def comment_create_view(request, post_id):
+    post = get_object_or_404(Post, pk=post_id, is_archived=False)
+    text = request.POST.get('text', '').strip()
+
+    error = None
+    if not text:
+        error = "Izoh bo'sh bo'lishi mumkin emas."
+    elif len(text) > Comment._meta.get_field('text').max_length:
+        error = "Izoh 2200 belgidan oshmasligi kerak."
+
+    comment = None
+    if error is None:
+        comment = Comment.objects.create(author=request.user, post=post, text=text)
+
+    if _wants_json(request):
+        if error:
+            return JsonResponse({'error': error}, status=400)
+        return JsonResponse({
+            'html': render_to_string('partials/comment.html', {'comment': comment}, request=request),
+            'comment_count': post.comments.count(),
+        })
+    return _redirect_back(request, reverse('post_detail', args=[post.id]))
+
+
+def _wants_json(request):
+    return 'application/json' in request.headers.get('Accept', '')
 
 
 @login_required(login_url='login')
@@ -152,7 +226,7 @@ def profile_view(request, user_id=None):
     posts = (
         profile_user.posts.filter(is_archived=False)
         .prefetch_related('media')
-        .annotate(like_count=Count('likes'))
+        .annotate(like_count=Count('likes', distinct=True), comment_count=Count('comments', distinct=True))
     )
     return render(request, 'profile.html', context={
         'profile_user': profile_user,
@@ -181,25 +255,25 @@ def follow_view(request, user_id):
     target = get_object_or_404(User, pk=user_id)
     if target != request.user:
         Follow.objects.get_or_create(follower=request.user, following=target)
-    return _redirect_back(request, user_id)
+    return _redirect_back(request, reverse('user_profile', args=[user_id]))
 
 
 @login_required(login_url='login')
 @require_POST
 def unfollow_view(request, user_id):
     Follow.objects.filter(follower=request.user, following_id=user_id).delete()
-    return _redirect_back(request, user_id)
+    return _redirect_back(request, reverse('user_profile', args=[user_id]))
 
 
 def _following_ids(user):
     return set(user.following.values_list('pk', flat=True))
 
 
-def _redirect_back(request, user_id):
+def _redirect_back(request, fallback_url):
     next_url = request.POST.get('next', '')
     if url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
         return HttpResponseRedirect(next_url)
-    return redirect('user_profile', user_id=user_id)
+    return HttpResponseRedirect(fallback_url)
 
 
 @login_required(login_url='login')

@@ -1,0 +1,20 @@
+{% if post.media.all|length > 1 %}
+    <div class="media-dots" aria-hidden="true">
+        {% for item in post.media.all %}<span{% if forloop.first %} class="active"{% endif %}></span>{% endfor %}
+    </div>
+{% endif %}
+
+<div class="post-actions">
+    {% include 'partials/like-button.html' %}
+    <a href="{% url 'post_detail' post.id %}#comment" class="action-btn" data-comment-focus aria-label="Comment">
+        <svg class="icon" aria-hidden="true"><use href="#i-comment"/></svg>
+    </a>
+    <span class="post-views" title="Views">
+        <svg class="icon" aria-hidden="true"><use href="#i-eye"/></svg>
+        {{ post.views }}
+    </span>
+</div>
+
+<p class="like-count">
+    <span data-like-count>{{ post.like_count }}</span> like<span data-like-plural>{{ post.like_count|pluralize }}</span>
+</p>

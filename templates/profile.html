@@ -78,12 +78,18 @@
                                 {{ post.like_count }}
                             </span>
                             <span>
+                                <svg class="icon" aria-hidden="true"><use href="#i-comment"/></svg>
+                                {{ post.comment_count }}
+                            </span>
+                            <span>
                                 <svg class="icon" aria-hidden="true"><use href="#i-eye-fill"/></svg>
                                 {{ post.views }}
                             </span>
                         </div>
                         {% if post.post_type == 'reels' %}
                             <a href="{% url 'reels' %}#reel-{{ post.id }}" class="tile-link" aria-label="Open reel"></a>
+                        {% else %}
+                            <a href="{% url 'post_detail' post.id %}" class="tile-link" aria-label="Open post"></a>
                         {% endif %}
                     </div>
                 {% endfor %}

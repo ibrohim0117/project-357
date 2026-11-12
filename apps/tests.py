@@ -5,7 +5,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 
-from .models import Follow, Post, PostMedia, User
+from .models import Comment, Follow, Like, Post, PostMedia, User
 from .views import media_view
 
 
@@ -105,6 +105,114 @@ class FollowTests(TestCase):
         self.assertEqual(len(all_posts), 2)
         following_posts = self.client.get(reverse('post_list'), {'tab': 'following'}).context['post_list']
         self.assertEqual([post.author for post in following_posts], [self.vali])
+
+
+class LikeTests(TestCase):
+    def setUp(self):
+        self.ali = User.objects.create_user('ali', password='x', phone='1')
+        self.vali = User.objects.create_user('vali', password='x', phone='2')
+        self.post = Post.objects.create(author=self.vali, about='salom')
+        self.client.force_login(self.ali)
+
+    def post_json(self, name, post=None):
+        return self.client.post(reverse(name, args=[(post or self.post).id]), headers={'Accept': 'application/json'})
+
+    def test_like_then_unlike_returns_json(self):
+        response = self.post_json('like')
+        self.assertEqual(response.json(), {'liked': True, 'like_count': 1})
+        response = self.post_json('unlike')
+        self.assertEqual(response.json(), {'liked': False, 'like_count': 0})
+
+    def test_like_twice_keeps_one_row(self):
+        self.post_json('like')
+        self.assertEqual(self.post_json('like').json(), {'liked': True, 'like_count': 1})
+        self.assertEqual(Like.objects.count(), 1)
+
+    def test_like_without_js_redirects_back(self):
+        response = self.client.post(reverse('like', args=[self.post.id]), {'next': '/posts/#post-1'})
+        self.assertEqual(response['Location'], '/posts/#post-1')
+        response = self.client.post(reverse('unlike', args=[self.post.id]), {'next': 'https://evil.example/'})
+        self.assertEqual(response['Location'], reverse('post_detail', args=[self.post.id]))
+
+    def test_like_requires_post_and_login(self):
+        self.assertEqual(self.client.get(reverse('like', args=[self.post.id])).status_code, 405)
+        self.client.logout()
+        self.client.post(reverse('like', args=[self.post.id]))
+        self.assertEqual(Like.objects.count(), 0)
+
+    def test_archived_or_unknown_post_is_404(self):
+        archived = Post.objects.create(author=self.vali, is_archived=True)
+        self.assertEqual(self.post_json('like', archived).status_code, 404)
+        self.assertEqual(self.client.post(reverse('like', args=[9999])).status_code, 404)
+
+    def test_feed_shows_like_state_and_counts(self):
+        Like.objects.create(author=self.vali, post=self.post)
+        Comment.objects.create(author=self.vali, post=self.post, text='a')
+        Comment.objects.create(author=self.ali, post=self.post, text='b')
+
+        post = self.client.get(reverse('post_list')).context['post_list'][0]
+        self.assertEqual((post.like_count, post.comment_count, post.is_liked), (1, 2, False))
+
+        Like.objects.create(author=self.ali, post=self.post)
+        response = self.client.get(reverse('post_list'))
+        post = response.context['post_list'][0]
+        self.assertEqual((post.like_count, post.comment_count, post.is_liked), (2, 2, True))
+        self.assertContains(response, 'aria-pressed="true"')
+        self.assertContains(response, reverse('unlike', args=[self.post.id]))
+
+
+class CommentTests(TestCase):
+    def setUp(self):
+        self.ali = User.objects.create_user('ali', password='x', phone='1')
+        self.post = Post.objects.create(author=self.ali, about='salom')
+        self.client.force_login(self.ali)
+        self.url = reverse('comment_create', args=[self.post.id])
+
+    def test_comment_json_returns_rendered_comment(self):
+        response = self.client.post(self.url, {'text': '  zo‘r  '}, headers={'Accept': 'application/json'})
+        data = response.json()
+        self.assertEqual(data['comment_count'], 1)
+        self.assertIn('zo‘r', data['html'])
+        self.assertIn('class="comment-author"', data['html'])
+        self.assertEqual(Comment.objects.get().text, 'zo‘r')
+
+    def test_empty_or_too_long_comment_is_rejected(self):
+        for text in ['', '   ', 'x' * 2201]:
+            with self.subTest(length=len(text)):
+                response = self.client.post(self.url, {'text': text}, headers={'Accept': 'application/json'})
+                self.assertEqual(response.status_code, 400)
+                self.assertIn('error', response.json())
+        self.assertEqual(Comment.objects.count(), 0)
+
+    def test_comment_without_js_redirects_back(self):
+        response = self.client.post(self.url, {'text': 'salom', 'next': f'/posts/#post-{self.post.id}'})
+        self.assertEqual(response['Location'], f'/posts/#post-{self.post.id}')
+        self.assertEqual(Comment.objects.count(), 1)
+
+    def test_comment_is_escaped(self):
+        self.client.post(self.url, {'text': '<script>alert(1)</script>'})
+        response = self.client.get(reverse('post_detail', args=[self.post.id]))
+        self.assertContains(response, '&lt;script&gt;alert(1)&lt;/script&gt;')
+        self.assertNotContains(response, '<script>alert(1)</script>')
+
+    def test_feed_shows_last_two_comments_oldest_first(self):
+        for text in ['birinchi', 'ikkinchi', 'uchinchi']:
+            Comment.objects.create(author=self.ali, post=self.post, text=text)
+        response = self.client.get(reverse('post_list'))
+        post = response.context['post_list'][0]
+        self.assertEqual([c.text for c in reversed(post.recent_comments)], ['ikkinchi', 'uchinchi'])
+        self.assertNotContains(response, 'birinchi')
+        self.assertContains(response, '<span data-comment-count>3</span>', html=True)
+
+    def test_detail_page_lists_all_comments(self):
+        for text in ['birinchi', 'ikkinchi', 'uchinchi']:
+            Comment.objects.create(author=self.ali, post=self.post, text=text)
+        response = self.client.get(reverse('post_detail', args=[self.post.id]))
+        self.assertEqual([c.text for c in response.context['comments']], ['birinchi', 'ikkinchi', 'uchinchi'])
+
+    def test_archived_post_detail_is_404(self):
+        archived = Post.objects.create(author=self.ali, is_archived=True)
+        self.assertEqual(self.client.get(reverse('post_detail', args=[archived.id])).status_code, 404)
 
 
 class ReelsTests(MediaTestCase):

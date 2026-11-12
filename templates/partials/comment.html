@@ -1,0 +1,14 @@
+{% load humanize %}
+<li class="comment">
+    <a href="{% url 'user_profile' comment.author_id %}" class="comment-avatar" tabindex="-1" aria-hidden="true">
+        {% include 'partials/avatar.html' with person=comment.author %}
+    </a>
+    <div class="comment-body">
+        <p class="comment-text">
+            <a href="{% url 'user_profile' comment.author_id %}" class="comment-author">{{ comment.author.username }}</a>
+            {{ comment.text|linebreaksbr }}
+        </p>
+        <time class="comment-time" datetime="{{ comment.created_at|date:'c' }}"
+              title="{{ comment.created_at|date:'d.m.Y H:i' }}">{{ comment.created_at|naturaltime }}</time>
+    </div>
+</li>

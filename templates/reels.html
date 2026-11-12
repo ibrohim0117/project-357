@@ -1,5 +1,5 @@
 {% extends 'app.html' %}
-{% load static %}
+{% load humanize static %}
 
 {% block title %}Reels • Instagram{% endblock %}
 
@@ -19,7 +19,7 @@
         {% for reel in reel_list %}
             {% with video=reel.media.all.0 %}
                 {% if video.media_type == 'video' %}
-                    <article class="reel is-paused" id="reel-{{ reel.id }}">
+                    <article class="reel is-paused" id="reel-{{ reel.id }}" data-post>
                         <div class="reel-stage">
                             <video class="reel-video" src="{{ video.file.url }}" loop muted playsinline preload="metadata"></video>
 
@@ -41,15 +41,21 @@
                                 {% endif %}
 
                                 <p class="reel-meta">
-                                    {% if reel.location %}{{ reel.location }} • {% endif %}{{ reel.created_at|timesince }} ago
+                                    {% if reel.location %}{{ reel.location }} • {% endif %}{{ reel.created_at|naturaltime }}
                                 </p>
                             </div>
 
                             <div class="reel-actions">
-                                <span class="reel-stat" title="Likes">
-                                    <svg class="icon" aria-hidden="true"><use href="#i-heart"/></svg>
-                                    {{ reel.like_count }}
-                                </span>
+                                <div class="reel-stat">
+                                    {% include 'partials/like-button.html' with post=reel anchor='reel' %}
+                                    <span data-like-count>{{ reel.like_count }}</span>
+                                </div>
+                                <a href="{% url 'post_detail' reel.id %}#comment" class="reel-stat" aria-label="Comments">
+                                    <span class="action-btn">
+                                        <svg class="icon" aria-hidden="true"><use href="#i-comment"/></svg>
+                                    </span>
+                                    {{ reel.comment_count }}
+                                </a>
                                 <button type="button" class="reel-sound is-muted" aria-label="Unmute">
                                     <svg class="icon icon-on" aria-hidden="true"><use href="#i-sound-on"/></svg>
                                     <svg class="icon icon-off" aria-hidden="true"><use href="#i-sound-off"/></svg>
@@ -127,4 +133,5 @@
 
         container.focus({ preventScroll: true });
     </script>
+    <script src="{% static 'js/interactions.js' %}"></script>
 {% endblock %}

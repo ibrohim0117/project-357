@@ -1,0 +1,11 @@
+<form method="post" class="like-form"
+      action="{% if post.is_liked %}{% url 'unlike' post.id %}{% else %}{% url 'like' post.id %}{% endif %}"
+      data-like-url="{% url 'like' post.id %}" data-unlike-url="{% url 'unlike' post.id %}">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.get_full_path }}#{{ anchor|default:'post' }}-{{ post.id }}">
+    <button type="submit" class="action-btn like-btn"
+            aria-pressed="{% if post.is_liked %}true{% else %}false{% endif %}"
+            aria-label="{% if post.is_liked %}Unlike{% else %}Like{% endif %}">
+        <svg class="icon" aria-hidden="true"><use href="#i-heart"/></svg>
+    </button>
+</form>

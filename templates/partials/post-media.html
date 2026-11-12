@@ -1,0 +1,26 @@
+<div class="post-media{% if post.post_type == 'reels' %} is-reels{% endif %}" data-double-tap-like>
+    <div class="media-track">
+        {% for item in post.media.all %}
+            {% if item.media_type == 'video' %}
+                <video class="media-item" src="{{ item.file.url }}" controls playsinline preload="metadata"{% if post.post_type == 'reels' %} loop{% endif %}></video>
+            {% else %}
+                <img class="media-item" src="{{ item.file.url }}"
+                     alt="{{ post.author.username }} post" loading="lazy">
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    {% if post.media.all|length > 1 %}
+        <span class="media-counter">1 / {{ post.media.all|length }}</span>
+        <button type="button" class="slide-btn prev" aria-label="Previous" hidden>
+            <svg class="icon" aria-hidden="true"><use href="#i-chevron-left"/></svg>
+        </button>
+        <button type="button" class="slide-btn next" aria-label="Next">
+            <svg class="icon" aria-hidden="true"><use href="#i-chevron-right"/></svg>
+        </button>
+    {% elif post.post_type == 'reels' %}
+        <span class="media-badge" title="Reels">
+            <svg class="icon" aria-hidden="true"><use href="#i-reels"/></svg>
+        </span>
+    {% endif %}
+</div>

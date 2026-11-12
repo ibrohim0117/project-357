@@ -1,0 +1,77 @@
+{% extends 'app.html' %}
+{% load humanize static %}
+
+{% block title %}{{ post.author.username }}{% if post.about %}: "{{ post.about|truncatechars:40 }}"{% endif %} • Instagram{% endblock %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'css/post.css' %}">
+    <link rel="stylesheet" href="{% static 'css/post-detail.css' %}">
+{% endblock %}
+
+{% block content %}
+    <article class="post post-detail" id="post-{{ post.id }}" data-post>
+
+        {% include 'partials/post-media.html' %}
+
+        <div class="detail-side">
+            <header class="post-header">
+                <a href="{% url 'user_profile' post.author_id %}" class="avatar-ring" aria-label="{{ post.author.username }}">
+                    {% include 'partials/avatar.html' with person=post.author %}
+                </a>
+
+                <div class="post-meta">
+                    <a href="{% url 'user_profile' post.author_id %}" class="post-author">{{ post.author.username }}</a>
+                    {% if post.location %}
+                        <span class="post-location">
+                            <svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg>
+                            {{ post.location }}
+                        </span>
+                    {% endif %}
+                </div>
+
+                {% include 'follow-button.html' with target=post.author %}
+            </header>
+
+            <div class="detail-scroll">
+                <ul class="comment-list" data-comment-list>
+                    {% if post.about %}
+                        <li class="comment is-caption">
+                            <a href="{% url 'user_profile' post.author_id %}" class="comment-avatar" tabindex="-1" aria-hidden="true">
+                                {% include 'partials/avatar.html' with person=post.author %}
+                            </a>
+                            <div class="comment-body">
+                                <p class="comment-text">
+                                    <a href="{% url 'user_profile' post.author_id %}" class="comment-author">{{ post.author.username }}</a>
+                                    {{ post.about|linebreaksbr }}
+                                </p>
+                                <time class="comment-time" datetime="{{ post.created_at|date:'c' }}">{{ post.created_at|naturaltime }}</time>
+                            </div>
+                        </li>
+                    {% endif %}
+
+                    {% for comment in comments %}
+                        {% include 'partials/comment.html' %}
+                    {% endfor %}
+                </ul>
+
+                <p class="no-comments" data-no-comments{% if comments %} hidden{% endif %}>
+                    <strong>No comments yet.</strong>
+                    Start the conversation.
+                </p>
+            </div>
+
+            <div class="detail-footer">
+                {% include 'partials/post-actions.html' %}
+                <time class="post-date" datetime="{{ post.created_at|date:'c' }}">{{ post.created_at|date:'F j, Y' }}</time>
+            </div>
+
+            {% include 'partials/comment-form.html' %}
+        </div>
+
+    </article>
+{% endblock %}
+
+{% block scripts %}
+    <script src="{% static 'js/carousel.js' %}"></script>
+    <script src="{% static 'js/interactions.js' %}"></script>
+{% endblock %}
